@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Counterfeit Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: a teller's window at night. One banknote at a time on a navy counter; stamp it REAL or COUNTERFEIT, then the verse that settles it. Single dark look, matched to the deck's navy and gold. */
+:root{
+  --counter:#0e1830; --counter-2:#17244a; --line:rgba(212,162,76,.32);
+  --fg:#f3ede0; --muted:#c3b99f; --gold:#d4a24c; --gold-2:#f0c674;
+  --note:#e9e2cc; --note-ink:#1d2a24; --note-engrave:#4f6b57;
+  --real:#7fd1a0; --fake:#ef8a7a; --crimson:#9b2335;
+  --display:"Cinzel", Georgia, "Times New Roman", serif;
+  --serif:"Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{background:var(--counter);color:var(--fg)}
+body{font-family:var(--body);font-size:16px;min-height:100%;
+  background:radial-gradient(ellipse at 50% -10%, var(--counter-2), var(--counter) 70%) fixed}
+.wrap{max-width:620px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold-2);outline-offset:3px}
+.label{font-family:var(--display);font-size:.72rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--gold)}
+h1,h2{font-family:var(--display);font-weight:800;margin:0;text-wrap:balance;letter-spacing:.02em}
+h1{font-size:clamp(2rem,8vw,3rem);line-height:1.02}
+h2{font-size:1.5rem}
+p{margin:0;line-height:1.55}
+.muted{color:var(--muted)}
+
+/* the banknote */
+.note{position:relative;background:var(--note);color:var(--note-ink);border-radius:10px;padding:14px;
+  box-shadow:0 18px 40px rgba(0,0,0,.45);overflow:hidden}
+.note::before{content:"";position:absolute;inset:7px;border-radius:6px;pointer-events:none;
+  border:2px solid var(--note-engrave);
+  background:
+    repeating-radial-gradient(circle at 0 0, transparent 0 9px, rgba(79,107,87,.10) 9px 10px),
+    repeating-radial-gradient(circle at 100% 100%, transparent 0 9px, rgba(79,107,87,.10) 9px 10px)}
+.note-in{position:relative;border:1px solid var(--note-engrave);border-radius:4px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;background:rgba(233,226,204,.82)}
+.note-top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--display);font-size:.7rem;font-weight:800;letter-spacing:.16em;color:var(--note-engrave)}
+.seal{width:40px;height:40px;border-radius:50%;border:2px solid var(--note-engrave);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:.62rem;letter-spacing:.06em;flex:none}
+.statement{font-family:var(--serif);font-size:clamp(1.2rem,4.8vw,1.5rem);line-height:1.4;min-height:5.6em;display:flex;align-items:center;justify-content:center;text-align:center;text-wrap:balance}
+.serial{font-family:var(--display);font-size:.72rem;letter-spacing:.2em;color:var(--crimson);font-weight:800;font-variant-numeric:tabular-nums}
+.stamp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-12deg) scale(1);font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,7vw,2.2rem);letter-spacing:.12em;padding:6px 16px;border:4px solid currentColor;border-radius:8px;background:rgba(233,226,204,.6);pointer-events:none;white-space:nowrap}
+.stamp.real{color:#1f7a47}
+.stamp.fake{color:var(--crimson)}
+.stamp.pop{animation:pop .28s ease-out}
+@keyframes pop{from{transform:translate(-50%,-50%) rotate(-12deg) scale(1.8);opacity:0}to{transform:translate(-50%,-50%) rotate(-12deg) scale(1);opacity:1}}
+
+/* controls */
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.btn{min-height:56px;border-radius:10px;border:2px solid var(--gold);background:transparent;font-family:var(--display);font-weight:800;letter-spacing:.12em;font-size:1rem;padding:10px 14px}
+.btn:hover{background:rgba(212,162,76,.12)}
+.btn.solid{background:var(--gold);color:#16110a;border-color:var(--gold)}
+.btn.solid:hover{background:var(--gold-2)}
+.btn.real{border-color:var(--real);color:var(--real)}
+.btn.fake{border-color:var(--fake);color:var(--fake)}
+.btn[disabled]{opacity:.35;cursor:default}
+.link{background:none;border:0;color:var(--gold-2);text-decoration:underline;text-underline-offset:3px;padding:8px 0;font-size:.95rem;align-self:center}
+.hud{display:flex;justify-content:space-between;align-items:end;gap:12px;font-variant-numeric:tabular-nums}
+.hud b{display:block;font-family:var(--display);font-size:1.35rem;color:var(--fg)}
+.hud span{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.bar{height:6px;border-radius:3px;background:rgba(243,237,224,.12);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);transition:width .3s}
+.panel{border:1px solid var(--line);border-radius:10px;padding:16px;background:rgba(23,36,74,.6);display:flex;flex-direction:column;gap:10px}
+.verdict{font-family:var(--display);font-weight:800;letter-spacing:.08em;font-size:1.05rem}
+.verdict.ok{color:var(--real)} .verdict.no{color:var(--fake)}
+.verse{font-family:var(--serif);font-style:italic;font-size:1.02rem;line-height:1.5;border-left:3px solid var(--gold);padding-left:12px}
+.ref{font-family:var(--display);font-size:.78rem;font-weight:800;letter-spacing:.14em;color:var(--gold);font-style:normal;display:block;margin-top:4px}
+.hint{font-size:.95rem;color:var(--gold-2)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input{background:rgba(243,237,224,.06);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:1rem}
+.rules{display:grid;gap:8px;padding:0;margin:0;list-style:none}
+.rules li{display:flex;gap:10px;line-height:1.45}
+.rules li::before{content:"";flex:none;width:8px;height:8px;margin-top:.5em;border:2px solid var(--gold);transform:rotate(45deg)}
+.big{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,12vw,4rem);line-height:1;color:var(--gold-2);font-variant-numeric:tabular-nums}
+.team{font-family:var(--display);font-size:1.25rem;font-weight:800;letter-spacing:.06em}
+.review{display:grid;gap:6px;padding:0;margin:0;list-style:none;font-size:.95rem}
+.review li{display:flex;gap:10px;line-height:1.4}
+.review .mk{flex:none;font-weight:700;width:1.2em}
+.review .ok{color:var(--real)} .review .no{color:var(--fake)}
+@media (prefers-reduced-motion:reduce){.stamp.pop{animation:none}.bar i{transition:none}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+<!-- START -->
+<section id="start" style="display:flex;flex-direction:column;gap:18px">
+  <a class="back" href="index.html" style="color:var(--gold-2);font-weight:600;text-decoration:none;align-self:flex-start;padding:8px 0">← FBCB Youth page</a>
+  <div class="label">I AM Series · Disciples Indeed</div>
+  <h1>Counterfeit Check</h1>
+  <p class="muted">Bank tellers learn to spot fake bills by handling real ones every day. Tonight you’re the teller. Every bill has a statement on it. Some are straight from Scripture. Some only sound like it.</p>
+
+  <div class="note" aria-hidden="true">
+    <div class="note-in">
+      <div class="note-top"><span>Sample Note</span><span class="seal">JN 8</span></div>
+      <div class="statement" style="min-height:3.4em">“The truth shall make you free.”</div>
+      <div class="note-top"><span class="serial">JN 08 · 31–32</span><span>Real or fake?</span></div>
+    </div>
+  </div>
+
+  <ul class="rules">
+    <li>Read the bill. Stamp it <b>&nbsp;REAL&nbsp;</b> or <b>&nbsp;COUNTERFEIT</b>.</li>
+    <li>Correct = 100 points. Get them right in a row for a streak bonus.</li>
+    <li>Stuck? <i>Hold it to the light</i> to see a hint. It costs 50 points.</li>
+    <li>12 bills per shift. Show your leader the final screen.</li>
+  </ul>
+
+  <div class="field">
+    <label class="label" for="teamName">Team name</label>
+    <input id="teamName" maxlength="28" placeholder="The Bereans" autocomplete="off">
+  </div>
+  <button class="btn solid" id="go" type="button">Open the window</button>
+  <p class="muted" id="best" style="text-align:center;font-size:.9rem" hidden></p>
+</section>
+
+<!-- PLAY -->
+<section id="play" hidden style="display:flex;flex-direction:column;gap:16px">
+  <div class="hud">
+    <div><span>Bill</span><b id="count">1 / 12</b></div>
+    <div style="text-align:center"><span>Streak</span><b id="streak">0</b></div>
+    <div style="text-align:right"><span>Score</span><b id="score">0</b></div>
+  </div>
+  <div class="bar" aria-hidden="true"><i id="prog" style="width:0%"></i></div>
+
+  <div class="note" id="note">
+    <div class="note-in">
+      <div class="note-top"><span>By the Light of Truth Reserve</span><span class="seal" id="seal">No.1</span></div>
+      <div class="statement" id="statement" aria-live="polite"></div>
+      <div class="note-top"><span class="serial" id="serial"></span><span>Series John 8</span></div>
+    </div>
+    <div class="stamp" id="stamp" hidden></div>
+  </div>
+
+  <div class="choices" id="choices">
+    <button class="btn real" id="pickReal" type="button">REAL</button>
+    <button class="btn fake" id="pickFake" type="button">COUNTERFEIT</button>
+  </div>
+  <button class="link" id="hintBtn" type="button">Hold it to the light (hint, −50)</button>
+  <p class="hint" id="hintText" hidden></p>
+
+  <div class="panel" id="result" hidden>
+    <div class="verdict" id="verdict"></div>
+    <p id="why"></p>
+    <div class="verse" id="verse"></div>
+    <button class="btn solid" id="next" type="button">Next bill</button>
+  </div>
+</section>
+
+<!-- END -->
+<section id="end" hidden style="display:flex;flex-direction:column;gap:18px;text-align:center">
+  <div class="label">Shift complete</div>
+  <div class="team" id="endTeam"></div>
+  <div class="big" id="endScore">0</div>
+  <p class="muted" id="endLine"></p>
+  <h2 id="rank"></h2>
+  <div class="panel" style="text-align:left">
+    <div class="verse">“If you abide in My word, you are My disciples indeed. And you shall know the truth, and the truth shall make you free.”<span class="ref">John 8:31–32 NKJV</span></div>
+    <p class="muted">Live in the real Word, and a counterfeit will feel wrong.</p>
+  </div>
+  <div class="panel" style="text-align:left">
+    <div class="label">Your bills</div>
+    <ul class="review" id="review"></ul>
+  </div>
+  <button class="btn solid" id="again" type="button">Work another shift</button>
+  <a class="back btn" href="index.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--fg)">Back to youth page</a>
+</section>
+
+</div>
+
+<script>
+(function(){
+var BILLS=[
+ {t:"“If you abide in My word, you are My disciples indeed.”",real:true,hint:"Check John 8:31.",
+  why:"Real. Jesus said this to people who had just believed in Him.",verse:"“If you abide in My word, you are My disciples indeed.”",ref:"John 8:31"},
+ {t:"Once you’ve prayed a prayer, it doesn’t matter if you ever open God’s Word again.",real:false,hint:"What did Jesus say real disciples do in John 8:31?",
+  why:"Counterfeit. Real disciples abide. They stay in His Word. Real faith keeps going.",verse:"“…if they had been of us, they would have continued with us.”",ref:"1 John 2:19"},
+ {t:"“God helps those who help themselves.”",real:false,hint:"Try to find it in a concordance. You won’t.",
+  why:"Counterfeit. It isn’t in the Bible. Benjamin Franklin’s almanac made it famous. Scripture says salvation is God’s gift, not our effort.",verse:"“For by grace you have been saved through faith, and that not of yourselves; it is the gift of God, not of works…”",ref:"Ephesians 2:8–9"},
+ {t:"“My people are destroyed for lack of knowledge.”",real:true,hint:"Think about the priests in Point 1.",
+  why:"Real. God said it through Hosea, about priests who didn’t teach His law.",verse:"“My people are destroyed for lack of knowledge. Because you have rejected knowledge, I also will reject you from being priest for Me…”",ref:"Hosea 4:6"},
+ {t:"Abiding in Jesus’ Word is how you earn your salvation.",real:false,hint:"Does a seed grow to become alive, or because it is alive?",
+  why:"Counterfeit. Abiding doesn’t earn salvation. It shows your faith is real, the way growth shows a seed is alive.",verse:"“For by grace you have been saved through faith… not of works, lest anyone should boast.”",ref:"Ephesians 2:8–9"},
+ {t:"Jesus said only a few people find the way that leads to life.",real:true,hint:"Remember the question from the start of the lesson.",
+  why:"Real. That’s why owning the “card” isn’t enough.",verse:"“Because narrow is the gate and difficult is the way which leads to life, and there are few who find it.”",ref:"Matthew 7:14"},
+ {t:"The religious leaders in Jesus’ day didn’t know the Scriptures.",real:false,hint:"Read John 5:39 carefully. What were they doing with the Scriptures?",
+  why:"Counterfeit. They searched the Scriptures. They knew the words but would not come to the One the words were about.",verse:"“You search the Scriptures… and these are they which testify of Me. But you are not willing to come to Me that you may have life.”",ref:"John 5:39–40"},
+ {t:"“You shall know the truth, and the truth shall make you free.”",real:true,hint:"The very next verse after the anchor.",
+  why:"Real. Freedom comes from knowing the truth, and you know it by abiding in His Word.",verse:"“And you shall know the truth, and the truth shall make you free.”",ref:"John 8:32"},
+ {t:"Jesus was a good teacher, but He never claimed to be God.",real:false,hint:"What did Jesus say about Abraham, and why did the crowd pick up stones?",
+  why:"Counterfeit. Jesus took God’s own name, I AM. The crowd understood the claim, which is why they picked up stones.",verse:"“Most assuredly, I say to you, before Abraham was, I AM.”",ref:"John 8:58"},
+ {t:"As long as your pastor knows the Bible, you don’t need to read it yourself.",real:false,hint:"Remember the lifeguard who can’t swim, and the Bereans.",
+  why:"Counterfeit. Even good teachers should be checked against Scripture. The Bereans checked Paul!",verse:"“…they received the word with all readiness, and searched the Scriptures daily to find out whether these things were so.”",ref:"Acts 17:11"},
+ {t:"“If anyone keeps My word he shall never see death.”",real:true,hint:"Same chapter, two endings.",
+  why:"Real. Keeping His Word leads to life. Not believing He is I AM leads to dying in your sins (John 8:24).",verse:"“Most assuredly, I say to you, if anyone keeps My word he shall never see death.”",ref:"John 8:51"},
+ {t:"The Bible says, “Cleanliness is next to godliness.”",real:false,hint:"Is it a verse, or just a saying people repeat?",
+  why:"Counterfeit. It’s an old saying, not Scripture. Don’t put words in God’s mouth.",verse:"“Do not add to His words, lest He rebuke you, and you be found a liar.”",ref:"Proverbs 30:6"},
+ {t:"Many people believed in Jesus, and later in the same chapter they picked up stones to throw at Him.",real:true,hint:"Compare John 8:30 with John 8:59.",
+  why:"Real. They believed for a moment, but His Word had no place in them (John 8:37).",verse:"“As He spoke these words, many believed in Him.” … “Then they took up stones to throw at Him.”",ref:"John 8:30, 59"},
+ {t:"The Bible says, “Money is the root of all evil.”",real:false,hint:"A teller should know this one. Read the exact wording of 1 Timothy 6:10.",
+  why:"Counterfeit, but close! The real verse says the LOVE of money. Close-but-wrong is exactly how counterfeits work.",verse:"“For the love of money is a root of all kinds of evil…”",ref:"1 Timothy 6:10"},
+ {t:"“This is the work of God, that you believe in Him whom He sent.”",real:true,hint:"One of the three steps on the “How to be saved” slide.",
+  why:"Real. Jesus said it when the crowd asked what work God wanted from them.",verse:"“This is the work of God, that you believe in Him whom He sent.”",ref:"John 6:29"}
+];
+var PER=12, KEY="counterfeit-check-best";
+var $=function(id){return document.getElementById(id)};
+var S;
+
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+function getBest(){try{return parseInt(localStorage.getItem(KEY)||"0",10)||0}catch(e){return 0}}
+function setBest(v){try{localStorage.setItem(KEY,String(v))}catch(e){}}
+function showBest(){var b=getBest();$("best").hidden=!b;if(b)$("best").textContent="Best score on this phone: "+b}
+function show(id){["start","play","end"].forEach(function(s){$(s).hidden=(s!==id)});window.scrollTo(0,0)}
+
+function start(){
+  S={deck:shuffle(BILLS).slice(0,PER),i:0,score:0,streak:0,best:0,correct:0,hinted:false,done:false,log:[],team:$("teamName").value.trim()};
+  show("play");render();
+}
+function render(){
+  var b=S.deck[S.i];
+  $("count").textContent=(S.i+1)+" / "+PER;
+  $("score").textContent=S.score;$("streak").textContent=S.streak;
+  $("prog").style.width=(S.i/PER*100)+"%";
+  $("statement").textContent=b.t;
+  $("seal").textContent="No."+(S.i+1);
+  $("serial").textContent="BLT "+String(1000+Math.floor(Math.random()*9000))+" "+String.fromCharCode(65+S.i);
+  $("stamp").hidden=true;$("stamp").className="stamp";
+  $("result").hidden=true;$("hintText").hidden=true;
+  $("hintBtn").hidden=false;$("hintBtn").disabled=false;
+  $("pickReal").disabled=false;$("pickFake").disabled=false;
+  S.hinted=false;S.done=false;
+}
+function hint(){
+  if(S.done||S.hinted)return;
+  S.hinted=true;S.score=Math.max(0,S.score-50);$("score").textContent=S.score;
+  $("hintText").textContent="Under the light: "+S.deck[S.i].hint;$("hintText").hidden=false;$("hintBtn").disabled=true;
+}
+function pick(sayReal){
+  if(S.done)return;S.done=true;
+  var b=S.deck[S.i], ok=(sayReal===b.real);
+  var st=$("stamp");st.textContent=b.real?"GENUINE":"COUNTERFEIT";st.className="stamp pop "+(b.real?"real":"fake");st.hidden=false;
+  if(ok){S.correct++;S.streak++;S.best=Math.max(S.best,S.streak);S.score+=100+(S.streak>1?25*(S.streak-1):0)}
+  else{S.streak=0}
+  S.log.push({t:b.t,ok:ok,ref:b.ref});
+  $("score").textContent=S.score;$("streak").textContent=S.streak;
+  $("verdict").textContent=ok?(S.streak>2?"Correct! "+S.streak+" in a row":"Correct!"):"Missed it";
+  $("verdict").className="verdict "+(ok?"ok":"no");
+  $("why").textContent=b.why;
+  $("verse").innerHTML="";$("verse").appendChild(document.createTextNode(b.verse));
+  var r=document.createElement("span");r.className="ref";r.textContent=b.ref+" NKJV";$("verse").appendChild(r);
+  $("pickReal").disabled=true;$("pickFake").disabled=true;$("hintBtn").hidden=true;
+  $("next").textContent=(S.i===PER-1)?"Close the window":"Next bill";
+  $("result").hidden=false;
+  try{$("result").scrollIntoView({behavior:"smooth",block:"nearest"})}catch(e){}
+}
+function next(){if(S.i<PER-1){S.i++;render();window.scrollTo(0,0)}else finish()}
+function finish(){
+  $("prog").style.width="100%";
+  var c=S.correct, rank=c>=11?"Head Teller":c>=8?"Teller":c>=5?"Teller in Training":"Back to the Vault";
+  $("rank").textContent=rank;
+  $("endTeam").textContent=S.team||"";$("endTeam").hidden=!S.team;
+  $("endScore").textContent=S.score;
+  $("endLine").textContent=c+" of "+PER+" correct · best streak "+S.best+(c<5?" · Read John 8 this week and try again!":"");
+  var ul=$("review");ul.innerHTML="";
+  S.log.forEach(function(l){var li=document.createElement("li");var m=document.createElement("span");m.className="mk "+(l.ok?"ok":"no");m.textContent=l.ok?"✓":"✗";var tx=document.createElement("span");tx.textContent=l.t+" ("+l.ref+")";li.appendChild(m);li.appendChild(tx);ul.appendChild(li)});
+  if(S.score>getBest())setBest(S.score);
+  show("end");showBest();
+}
+$("go").addEventListener("click",start);
+$("pickReal").addEventListener("click",function(){pick(true)});
+$("pickFake").addEventListener("click",function(){pick(false)});
+$("hintBtn").addEventListener("click",hint);
+$("next").addEventListener("click",next);
+$("again").addEventListener("click",function(){show("start")});
+showBest();
+})();
+</script>
+
+</body>
+</html>
