@@ -1,0 +1,15 @@
+{
+  "name": "FBCB Student Ministries",
+  "short_name": "FBCB Youth",
+  "description": "Meeting times, events, trips, prayer requests and contact info for First Baptist Church of Bassett youth.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0912",
+  "theme_color": "#0b0912",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
