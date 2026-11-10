@@ -281,6 +281,9 @@ function mailHref(s,f){
   if(c.cc&&(f.type!=='Prayer request'||s.prayerCc!==false))q+='&cc='+encodeURIComponent(c.cc);
   return 'mailto:'+encodeURIComponent(c.email).replace(/%40/g,'@')+'?'+q;
 }
+function gmailHref(s,f){var c=s.contact;if(!c.email)return null;
+  var u='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(c.email)+'&su='+encodeURIComponent(mailSubject(f))+'&body='+encodeURIComponent(mailBody(f));
+  if(c.cc&&(f.type!=='Prayer request'||s.prayerCc!==false))u+='&cc='+encodeURIComponent(c.cc);return u;}
 function viewContact(s){
   var c=s.contact;
   var card=h('div',{class:'contact yp-card'},h('div',{class:'eyebrow'},'Youth pastor'),h('div',{},h('div',{class:'name',text:c.name}),h('div',{class:'role',text:c.role}),c.credentials?h('div',{class:'cred',text:c.credentials}):null),
@@ -300,7 +303,8 @@ function viewContact(s){
   var f={type:'Question',share:false,name:'',who:'Parent',reply:'',subject:'',message:''};
   var link=h('a',{class:'btn',href:'#',id:'msg-send'},'Open in my email app');
   var copyBtn=h('button',{class:'btn ghost',type:'button',id:'msg-copy'},'Copy message');
-  function sync(){var href=mailHref(s,f);if(href){link.href=href;link.removeAttribute('aria-disabled');}else{link.removeAttribute('href');link.setAttribute('aria-disabled','true');}}
+  var gm=h('a',{class:'btn yellow',id:'msg-gmail',target:'_blank',rel:'noopener'},'Send with Gmail');
+  function sync(){var href=mailHref(s,f);var g=gmailHref(s,f);if(g){gm.href=g;gm.hidden=false;}else{gm.hidden=true;}if(href){link.href=href;link.removeAttribute('aria-disabled');}else{link.removeAttribute('href');link.setAttribute('aria-disabled','true');}}
   function bind(el,key){el.addEventListener('input',function(){f[key]=el.value;sync();});return el;}
   copyBtn.addEventListener('click',function(){var txt='To: '+(s.contact.email||'')+'\nSubject: '+mailSubject(f)+'\n\n'+mailBody(f);copy(txt,copyBtn);});
   var ccPrayer=!!(s.contact.cc&&s.prayerCc!==false);
@@ -322,9 +326,9 @@ function viewContact(s){
     subjLabel,prayBox,
     h('label',{for:'m-msg'},'Message',msgArea),
     s.formLink?h('div',{class:'btns'},h('a',{class:'btn yellow',href:s.formLink,target:'_blank',rel:'noopener'},'Send through the message form')):null,
-    h('div',{class:'btns'},link,copyBtn),
+    h('div',{class:'btns'},gm,link,copyBtn),
     h('textarea',{id:'copy-fallback',hidden:true,'aria-label':'Message text to copy',readonly:true}),
-    h('p',{class:'hint'},s.contact.email?('"Open in my email app" starts a new email to '+s.contact.email+' with your message filled in — you still press Send. If nothing opens, tap Copy message and paste it into an email or text.'):'Messaging opens once an email address is added.'));
+    h('p',{class:'hint'},s.contact.email?('“Send with Gmail” opens Gmail in a new tab with your message filled in. “Open in my email app” uses your phone or computer’s mail app, if one is set up. Either way, you still press Send. If neither works, tap Copy message and paste it into an email or text to '+s.contact.email+'.'):'Messaging opens once an email address is added.'));
   sync();
   var prayCard=h('div',{class:'ask pray-card'},h('div',{class:'eyebrow'},'Prayer requests'),h('h3',{},'How can we pray for you?'),
     s.prayerForm?h('p',{class:'hint'},'You choose who sees it: Pastor Craig only, the youth leaders, or the group by first name. You can leave your name off.'):h('p',{class:'hint'},'Use the message box below and choose “Prayer request.” It goes privately to Pastor Craig.'),
