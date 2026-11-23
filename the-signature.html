@@ -1,0 +1,206 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0c1726"><title>The Signature</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one challenge card at a time over a stacked "bedrock" strata backdrop; HUD on top shows gate and time. */
+:root{
+  --bg:#0c1726; --surface:#14243a; --raise:#1c3754; --ink:#f3f1ea; --muted:#a9b7c9; --line:#2b4566;
+  --gold:#f2b84b; --teal:#3ee0c8; --bad:#ff7a6b; --good:#7ee08a;
+  --f-display:"Bebas Neue",Impact,"Arial Narrow",sans-serif;
+  --f-body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--f-body);min-height:100vh}
+.strata{position:fixed;inset:auto 0 0 0;height:38vh;pointer-events:none;opacity:.55;
+  background:linear-gradient(180deg,transparent 0 10%,#1a2f4a 10% 30%,#203a5a 30% 48%,#172b44 48% 66%,#24426a 66% 82%,#13233a 82% 100%);
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 40%);mask-image:linear-gradient(180deg,transparent,#000 40%)}
+.wrap{position:relative;max-width:720px;margin:0 auto;padding:22px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;font:700 13px/1 var(--f-mono);letter-spacing:.08em;color:var(--muted)}
+.hud b{color:var(--gold);font-size:18px;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:6px}.dots i{width:22px;height:6px;border-radius:3px;background:var(--line)}.dots i.on{background:var(--teal)}.dots i.done{background:var(--gold)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;display:grid;gap:14px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.kicker{font:700 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--teal)}
+h1,h2{font-family:var(--f-display);font-weight:400;letter-spacing:.02em;margin:0;line-height:.95}
+h1{font-size:clamp(56px,14vw,96px);color:var(--gold)}
+h2{font-size:clamp(34px,8vw,48px)}
+p{margin:0}
+.muted{color:var(--muted)}
+.ref{font:700 12px/1 var(--f-mono);letter-spacing:.1em;color:var(--gold)}
+button,input{font:inherit}
+.btn{font:700 17px/1 var(--f-body);border:0;border-radius:10px;padding:14px 18px;background:var(--gold);color:#1b1405;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input[type=text]{width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:18px}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;background:var(--raise);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:13px 15px;cursor:pointer;font-size:17px}
+.opt.right{border-color:var(--good);background:#1d3d2f}.opt.wrong{border-color:var(--bad);background:#3d2024}
+.sort{display:grid;gap:10px}
+.sortrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.sortrow .pick{display:flex;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:8px 12px;font:700 13px/1 var(--f-body);cursor:pointer;white-space:nowrap}
+.chip.sel{background:var(--teal);color:#06211d;border-color:var(--teal)}
+.sortrow.ok{border-color:var(--good)}.sortrow.no{border-color:var(--bad)}
+.build{min-height:64px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:12px;font-size:20px;line-height:1.5}
+.bank{display:flex;flex-wrap:wrap;gap:8px}
+.word{border:1px solid var(--line);background:var(--raise);color:var(--ink);border-radius:8px;padding:9px 12px;font-size:17px;cursor:pointer}
+.word.used{visibility:hidden}
+.note{background:#102033;border-left:4px solid var(--teal);border-radius:0 10px 10px 0;padding:12px 14px;font-size:16px}
+.msg{min-height:24px;font-weight:700}
+.msg.bad{color:var(--bad)}.msg.good{color:var(--good)}
+.stamp{width:120px;height:120px;border-radius:50%;margin:0 auto;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ffd98a,#c98a1e 70%);color:#3a2400;font:400 38px/1 var(--f-display);box-shadow:inset 0 -6px 14px rgba(0,0,0,.35),0 10px 30px rgba(242,184,75,.25)}
+.big{font:400 clamp(40px,10vw,64px)/1 var(--f-display);color:var(--gold);font-variant-numeric:tabular-nums}
+.tf{display:grid;gap:10px}
+.tfrow{display:grid;gap:8px;background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:12px}
+.tfrow.ok{border-color:var(--good)}.tfrow.no{border-color:var(--bad)}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+@media (prefers-reduced-motion:no-preference){.card{animation:rise .35s ease-out}@keyframes rise{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}}
+@media (max-width:480px){.sortrow{grid-template-columns:1fr}}
+</style>
+</head><body><div class="strata" aria-hidden="true"></div>
+<a href="index.html" style="position:relative;display:inline-block;margin:16px 0 0 max(16px,env(safe-area-inset-left,0px));color:#a9b7c9;font:700 14px/1 'Source Sans 3',system-ui,sans-serif;text-decoration:none;border:1px solid #2b4566;border-radius:99px;padding:9px 14px">← FBCB Youth page</a>
+<div class="wrap" id="app"></div>
+<script>
+(function(){
+var PEN_WRONG=15, PEN_HINT=30;
+var S={team:'',start:0,pen:0,gate:0,timer:null};
+var app=document.getElementById('app');
+function el(t,a,c){var e=document.createElement(t);a=a||{};for(var k in a){if(k==='text')e.textContent=a[k];else if(k==='html')e.innerHTML=a[k];else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),a[k]);else e.setAttribute(k,a[k]);}
+  [].concat(c||[]).forEach(function(x){if(x==null)return;e.appendChild(typeof x==='string'?document.createTextNode(x):x);});return e;}
+function fmt(sec){sec=Math.max(0,Math.round(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');}
+function elapsed(){return S.start?(Date.now()-S.start)/1000+S.pen:0;}
+function best(){try{return +localStorage.getItem('sigBest')||0;}catch(e){return 0;}}
+function setBest(v){try{localStorage.setItem('sigBest',String(v));}catch(e){}}
+var GATES=['Painting','Hebrews 1','The Stamp','Truly','The Verse','The Lock'];
+function hud(){var t=el('b',{id:'clock',text:fmt(elapsed())});
+  return el('div',{class:'hud'},[el('span',{},[S.team?S.team.toUpperCase()+' · ':'','GATE '+(S.gate+1)+'/'+GATES.length]),
+    el('span',{class:'dots','aria-hidden':'true'},GATES.map(function(g,i){return el('i',{class:i<S.gate?'done':i===S.gate?'on':''});})),
+    el('span',{},['TIME ',t])]);}
+function tick(){var c=document.getElementById('clock');if(c)c.textContent=fmt(elapsed());}
+function screen(nodes){app.innerHTML='';[].concat(nodes).forEach(function(n){if(n)app.appendChild(n);});window.scrollTo(0,0);}
+function penalty(sec,msgEl,text){S.pen+=sec;tick();if(msgEl){msgEl.className='msg bad';msgEl.textContent=text||('+'+sec+' seconds');}}
+function next(){S.gate++;GATEFN[S.gate]?GATEFN[S.gate]():finish();}
+function hintBtn(text,msgEl){var used=false;return el('button',{class:'btn ghost',type:'button',onclick:function(){if(used)return;used=true;penalty(PEN_HINT,null);msgEl.className='msg';msgEl.textContent='Hint (+30s): '+text;}},'Hint (+30s)');}
+
+/* ---------- start ---------- */
+function startScreen(){
+  var b=best();
+  var input=el('input',{type:'text',id:'team',placeholder:'Team name',maxlength:'24','aria-label':'Team name'});
+  var go=el('button',{class:'btn',type:'button',onclick:function(){S.team=input.value.trim()||'Team';S.start=Date.now();S.pen=0;S.gate=0;clearInterval(S.timer);S.timer=setInterval(tick,500);GATEFN[0]();}},'Start the clock');
+  input.addEventListener('keydown',function(e){if(e.key==='Enter')go.click();});
+  screen(el('div',{class:'card'},[
+    el('div',{class:'kicker',text:'BEDROCK · Week 1 · Hebrews 1:1–3'}),
+    el('h1',{text:'The Signature'}),
+    el('p',{style:'font-size:19px'},'A painting can prove there’s a painter. Only the painter can tell you his name. Get through six gates to find out how God signed His work.'),
+    el('p',{class:'muted'},'Wrong answers add 15 seconds. Hints add 30. Lowest time wins.'),
+    b?el('p',{class:'ref',text:'BEST TIME ON THIS DEVICE: '+fmt(b)}):null,
+    input,el('div',{class:'row'},[go])]));
+  input.focus();
+}
+
+/* ---------- gate 1: sort ---------- */
+function gSort(){
+  var items=[['That there is a painter','show'],['Their name','only'],['That they’re skilled','show'],['What they love','only'],['That they’re creative','show'],['Why they made it','only']];
+  var picks={},msg=el('div',{class:'msg'});
+  var rows=items.map(function(it,i){var r=el('div',{class:'sortrow'});var a=el('button',{class:'chip',type:'button'},'Painting shows'),b=el('button',{class:'chip',type:'button'},'Only the painter can tell');
+    function pick(v){picks[i]=v;a.className='chip'+(v==='show'?' sel':'');b.className='chip'+(v==='only'?' sel':'');r.className='sortrow';}
+    a.addEventListener('click',function(){pick('show');});b.addEventListener('click',function(){pick('only');});
+    r.appendChild(el('span',{text:it[0]}));r.appendChild(el('span',{class:'pick'},[a,b]));return r;});
+  var check=el('button',{class:'btn',type:'button',onclick:function(){
+    if(Object.keys(picks).length<items.length){msg.className='msg';msg.textContent='Sort every card first.';return;}
+    var wrong=0;items.forEach(function(it,i){var ok=picks[i]===it[1];rows[i].className='sortrow '+(ok?'ok':'no');if(!ok)wrong++;});
+    if(wrong){penalty(PEN_WRONG,msg,wrong+' in the wrong pile. +15 seconds. Fix the red ones.');return;}
+    msg.className='msg good';msg.textContent='Right. Creation shows THAT God is. Knowing WHO He is takes Him speaking.';
+    check.disabled=true;setTimeout(next,1600);}},'Check');
+  screen([hud(),el('div',{class:'card'},[el('div',{class:'kicker',text:'Gate 1 · The Painting'}),el('h2',{text:'What can a painting tell you?'}),
+    el('p',{class:'muted'},'Sort each card. Does the painting show it, or can only the painter tell you?'),
+    el('div',{class:'sort'},rows),msg,el('div',{class:'row'},[check,hintBtn('A painting proves skill. It can’t say anyone’s name.',msg)])])]);
+}
+
+/* ---------- generic multiple choice ---------- */
+function mc(kicker,title,lead,qs,after){
+  var i=0;
+  function show(){var q=qs[i],msg=el('div',{class:'msg'}),done=false;
+    var opts=q.o.map(function(t,k){var b=el('button',{class:'opt',type:'button',text:t,onclick:function(){if(done)return;
+      if(k===q.a){done=true;b.className='opt right';msg.className='msg good';msg.textContent=q.why||'Correct.';setTimeout(function(){i++;i<qs.length?show():(after?after():next());},q.why?1900:900);}
+      else{b.className='opt wrong';b.disabled=true;penalty(PEN_WRONG,msg,'Not quite. +15 seconds.');}}});return b;});
+    screen([hud(),el('div',{class:'card'},[el('div',{class:'kicker',text:kicker+(qs.length>1?' · '+(i+1)+' of '+qs.length:'')}),el('h2',{text:title}),
+      lead?el('p',{class:'muted'},lead):null,q.ref?el('div',{class:'ref',text:q.ref}):null,el('p',{style:'font-size:19px;font-weight:600',text:q.q}),
+      q.art||null,el('div',{class:'opts'},opts),msg,q.hint?el('div',{class:'row'},[hintBtn(q.hint,msg)]):null])]);}
+  show();
+}
+function gHeb(){mc('Gate 2 · Open Hebrews 1','God has spoken','Open your Bible or phone to Hebrews 1:1–3 (NKJV).',[
+  {q:'Who is doing the speaking?',ref:'HEBREWS 1:1',o:['The prophets','God','The angels','The writer of Hebrews'],a:1,why:'God. He started the conversation.',hint:'Read the very first word of verse 1.'},
+  {q:'How did He speak in time past?',ref:'HEBREWS 1:1',o:['Only once, on Mount Sinai','At various times and in various ways, by the prophets','Through nature only','He stayed silent'],a:1,why:'Many times and many ways: the burning bush, dreams, prophets, the written Word.'},
+  {q:'How has He spoken “in these last days”?',ref:'HEBREWS 1:2',o:['By His Son','By a new prophet','By angels','By our feelings'],a:0,why:'By His Son. Jesus isn’t one more prophet. He is God’s final, fullest word.'}]);}
+function gStamp(){mc('Gate 3 · The Stamp','“Express image”',null,[
+  {q:'Hebrews 1:3 calls Jesus “the express image of His person.” The Greek word is charaktēr. What was a charaktēr?',ref:'HEBREWS 1:3 · χαρακτήρ',
+   art:el('div',{class:'stamp','aria-hidden':'true',text:'χ'}),
+   o:['A rough sketch of someone','A shadow on a wall','An engraved stamp that presses its exact image into a coin','A painted portrait that looks a little like someone'],a:2,
+   why:'An engraved stamp. Press it into metal and the coin carries its exact image. Jesus isn’t a guess about God. He’s God’s exact imprint.',hint:'Our English word “character” comes from it, and it has to do with coins.'}]);}
+
+/* ---------- gate 4: true/false ---------- */
+function gTF(){
+  var items=[['We can know everything there is to know about God.',false,'Deuteronomy 29:29: the secret things belong to the LORD.'],
+    ['What God has revealed about Himself is really Him.',true,'The revealed things belong to us. We know Him truly, not totally.'],
+    ['Studying nature alone can tell us God’s name.',false,'Creation shows THAT God is (Romans 1:20). His name takes Him speaking.'],
+    ['If you want to know what God is like, look at Jesus.',true,'Hebrews 1:3 and John 1:18: the Son has declared Him.']];
+  var picks={},msg=el('div',{class:'msg'});
+  var rows=items.map(function(it,i){var r=el('div',{class:'tfrow'});var why=el('div',{class:'muted',style:'font-size:15px'});
+    var t=el('button',{class:'chip',type:'button'},'True'),f=el('button',{class:'chip',type:'button'},'False');
+    function pick(v){picks[i]=v;t.className='chip'+(v===true?' sel':'');f.className='chip'+(v===false?' sel':'');r.className='tfrow';why.textContent='';}
+    t.addEventListener('click',function(){pick(true);});f.addEventListener('click',function(){pick(false);});
+    r.appendChild(el('span',{style:'font-weight:600',text:it[0]}));r.appendChild(el('div',{class:'row'},[t,f]));r.appendChild(why);r._why=why;return r;});
+  var check=el('button',{class:'btn',type:'button',onclick:function(){
+    if(Object.keys(picks).length<items.length){msg.className='msg';msg.textContent='Answer all four first.';return;}
+    var wrong=0;items.forEach(function(it,i){var ok=picks[i]===it[1];rows[i].className='tfrow '+(ok?'ok':'no');if(ok)rows[i]._why.textContent=it[2];else wrong++;});
+    if(wrong){penalty(PEN_WRONG,msg,wrong+' wrong. +15 seconds. Fix the red ones.');return;}
+    msg.className='msg good';msg.textContent='We can know God truly, not totally. You can swim in the ocean without containing it.';check.disabled=true;setTimeout(next,2400);}},'Check');
+  screen([hud(),el('div',{class:'card'},[el('div',{class:'kicker',text:'Gate 4 · Truly, Not Totally'}),el('h2',{text:'True or false?'}),
+    el('div',{class:'ref',text:'DEUTERONOMY 29:29'}),el('div',{class:'tf'},rows),msg,el('div',{class:'row'},[check,hintBtn('Two are true and two are false.',msg)])])]);
+}
+
+/* ---------- gate 5: build the verse ---------- */
+function gVerse(){
+  var target='has in these last days spoken to us by His Son'.split(' ');
+  var bank=target.concat(['prophets','angels']).map(function(w,i){return {w:w,id:i};});
+  for(var i=bank.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=bank[i];bank[i]=bank[j];bank[j]=t;}
+  var got=[],msg=el('div',{class:'msg'}),box=el('div',{class:'build','aria-live':'polite'},'God … ');
+  var btns=bank.map(function(b){var btn=el('button',{class:'word',type:'button',text:b.w,onclick:function(){
+    if(b.w===target[got.length]){got.push(b.w);btn.classList.add('used');box.textContent='God … '+got.join(' ');msg.textContent='';
+      if(got.length===target.length){msg.className='msg good';msg.textContent='Hebrews 1:1–2. That’s your memory verse this week.';setTimeout(next,1800);}}
+    else penalty(PEN_WRONG,msg,'“'+b.w+'” doesn’t go there. +15 seconds.');}});return btn;});
+  screen([hud(),el('div',{class:'card'},[el('div',{class:'kicker',text:'Gate 5 · The Verse'}),el('h2',{text:'Build the memory verse'}),
+    el('p',{class:'muted'},'Tap the words in order. Two words don’t belong.'),el('div',{class:'ref',text:'HEBREWS 1:2 (NKJV)'}),box,el('div',{class:'bank'},btns),msg,
+    el('div',{class:'row'},[hintBtn('The verse ends with “by His Son.”',msg)])])]);
+}
+
+/* ---------- gate 6: the lock ---------- */
+function gLock(){
+  var msg=el('div',{class:'msg'}),inp=el('input',{type:'text',id:'lock',placeholder:'Type the missing word','aria-label':'Missing word',autocomplete:'off'});
+  var go=el('button',{class:'btn',type:'button',onclick:function(){var v=inp.value.trim().toLowerCase().replace(/[^a-z]/g,'');
+    if(['shows','reveals','revealed','showed'].indexOf(v)>-1){msg.className='msg good';msg.textContent='Unlocked.';go.disabled=true;setTimeout(finish,900);}
+    else penalty(PEN_WRONG,msg,'The lock didn’t open. +15 seconds.');}},'Unlock');
+  inp.addEventListener('keydown',function(e){if(e.key==='Enter')go.click();});
+  screen([hud(),el('div',{class:'card'},[el('div',{class:'kicker',text:'Gate 6 · The Lock'}),el('h2',{text:'Finish the big idea'}),
+    el('p',{style:'font:400 clamp(30px,7vw,44px)/1.1 var(--f-display);color:var(--gold)'},'We don’t find God. God ______ Himself.'),
+    inp,msg,el('div',{class:'row'},[go,hintBtn('God takes the first step. He ___ Himself to us.',msg)])])]);
+  inp.focus();
+}
+
+function finish(){
+  clearInterval(S.timer);var t=elapsed(),b=best(),nb=!b||t<b;if(nb)setBest(Math.round(t));
+  screen(el('div',{class:'card',style:'text-align:center'},[el('div',{class:'kicker',text:'All six gates open'}),
+    el('h2',{text:S.team}),el('div',{class:'big',text:fmt(t)}),el('p',{class:'muted',text:nb?'New best time on this device.':'Best on this device: '+fmt(b)}),
+    el('p',{style:'font:400 clamp(30px,7vw,42px)/1.1 var(--f-display);color:var(--ink)'},'We don’t find God. God shows Himself.'),
+    el('div',{class:'note',style:'text-align:left'},[el('b',{},'Line 1 of your “What I Believe” page: '),'“I believe God can be known because ______.”']),
+    el('p',{class:'muted'},'Next week: God Needs Nothing. What could you give God that He doesn’t already have?'),
+    el('div',{class:'row',style:'justify-content:center'},[el('button',{class:'btn ghost',type:'button',onclick:startScreen},'Play again')])]));
+}
+var GATEFN=[gSort,gHeb,gStamp,gTF,gVerse,gLock];
+startScreen();
+})();
+</script>
+</body></html>
